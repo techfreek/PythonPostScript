@@ -1,31 +1,38 @@
 #Programmer: Alex Bahm
 global debug
+from stack.py import *
 debug = False
 
 def add(a, b):
-
-return
+    push(a + b)
+return a + b
 
 def sub(a, b):
-
-return
+    push(a - b)
+return a - b
 
 def mul(a, b):
-
-return
+    push(a * b)
+return a * b
 
 def div(a, b):
-
-return
+    push(a / b)
+return a / b
 
 def eq(a, b):
-
-return
+    boolean = 0
+    if a == b:
+        boolean = 1
+return boolean
 
 def lt(a, b):
-
-return
+    lessThan = 0
+    if a > b:
+        lessThan = 1
+return lessThan
 
 def gt(a, b):
-
-return
+    greaterThan = 0
+    if a < b:
+        greaterThan = 1
+return greaterThan
