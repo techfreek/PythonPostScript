@@ -13,20 +13,18 @@ class stack:
     def pop():
         psStack.pop(0)
         
-    def stack():
-        
-    return
 
     def top():
-    return psStack.pop(0)
+        return psStack.pop(0)
 
     def poptwo():
         a = psStack.pop(0)
         b = psStack.pop(0)
-    return (a, b)
+        return (a, b)
 
     def push(value):
         psStack.insert(0, value)
-    return
 
+    def popDict():
+        #Develop method to find and pop dictionar
 
