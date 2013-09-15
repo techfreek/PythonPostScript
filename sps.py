@@ -4,7 +4,7 @@ debug = False
 
 psStack = []
 psStackDicts = []
-origDict = {true: '1', false: '0'}
+origDict = {'true': '1', 'false': '0'}
 dictStack = [origDict]
 
 #<-------------------------Stack------------------------->
@@ -20,13 +20,13 @@ def popTop():
 def stackPrint():
     stackHeight = len(psStack)
     for i in range(stackHeight):
-        print(psStack[i], "\n")
+        print(psStack[i])
 
 def top():
-    print(psStack(0), "\n")
+    print(psStack(0))
     return psStack.pop(0)
 
-def poptwo():
+def popTwo():
     a = psStack.pop(0)
     b = psStack.pop(0)
     return (a, b)
@@ -49,45 +49,49 @@ def ifelseOp(boolVal, funcA, funcB):
     else:
         execute(funcB)
 
-
 def execute(funcName):
     print("W.I.P.\n")
 
-
-    
 #<----------------------Math---------------------->
-def add(a, b):
-    push(a + b)
-    return a + b
+def add():
+    vals = popTwo()
+    pushStack(vals[0] + vals[1])
+    return vals[0] + vals[1]
 
-def sub(a, b):
-    push(a - b)
-    return a - b
+def sub():
+    vals = popTwo()
+    pushStack(vals[0] - vals[1])
+    return vals[0] - vals[1]
 
-def mul(a, b):
-    push(a * b)
-    return a * b
+def mul():
+    vals = popTwo()
+    pushStack(vals[0] * vals[1])
+    return vals[0] * vals[1]
 
-def div(a, b):
-    push(a / b)
-    return a / b
+def div():
+    vals = popTwo()
+    pushStack(vals[0] / vals[1])
+    return vals[0] / vals[1]
 
-def eq(a, b):
-    boolean = 0
-    if a == b:
-        boolean = 1
+def eq():
+    vals = popTwo()
+    boolean = False
+    if vals[0] == vals[1]:
+        boolean = True
     return boolean
 
-def lt(a, b):
-    lessThan = 0
-    if a > b:
-        lessThan = 1
+def lt():
+    vals = popTwo()
+    lessThan = False
+    if vals[0] > vals[1]:
+        lessThan = True
     return lessThan
 
-def gt(a, b):
-    greaterThan = 0
-    if a < b:
-        greaterThan = 1
+def gt():
+    vals = popTwo()
+    greaterThan = False
+    if vals[0] < vals[1]:
+        greaterThan = True
     return greaterThan
 
 
@@ -128,10 +132,12 @@ def notOp(boolVar):
 #<-------------------------Dictionary------------------------->
 
 def lookup(key):
-    for i in len(dictStack):
+    for i in range(len(dictStack)):
+        if debug: print(i)
         currDict = dictStack[i]
-        if key in dictionary.values():
-            value = dictionary.get(key, 0)
+        value = currDict.get(key, False)
+        if value:
+            if debug: print(value)
             pushStack(value)
             return value
     raise NameError("Error: Variable, ", key, ", has not been defined")
@@ -141,14 +147,14 @@ def define(key, value):
     currDict = dictStack[0]
     if key == "true" or key == "false":
         return None;
-    dictionary[key] = value
+    currDict[key] = value
 
 def dictz():
     psStackDicts.insert(0, len(psStack))
-    push({})
+    pushStack({})
 
 def begin():
     dictStack.insert(0, popDict())
 
 def end():
-    dictStack.pop(0)
+    dictStack.popTop(0)
