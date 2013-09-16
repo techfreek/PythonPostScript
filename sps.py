@@ -18,7 +18,10 @@ def exch():
 
 #No input, just removes top most value
 def popTop():
-    psStack.pop(0)
+    if len(psStack) > 0:
+        psStack.pop(0)
+    else:
+        raise ValueError("Error: Can't pop. No values on the stack.")
 
 #No inputs needed, just prints value, only output is the text displayed.
 def stackPrint():
@@ -33,6 +36,8 @@ def top():
 
 #No inputs, returns top two elements in a tuple
 def popTwo(): #For use in mathmatical operations which use two digits
+    if len(psStack) < 2:
+        raise ValueError("Error: Not enough values to evaluate.")
     a = psStack.pop(0) 
     b = psStack.pop(0)
     return (a, b) #return as tuple
@@ -44,16 +49,23 @@ def pushStack(value):
 #No inputs, returns the top most dictionary
 def popDict():
     #algorithm works by counting how many values in the stack when pushed and popped. When popped, it counts that far from the end to the correct position
-    return psStack.pop(len(psStack) - psStackDicts.pop(0)) #uses the values from psStackDicts to remove the dictionaries
+    if debug: print(psStack[len(psStack) - psStackDicts[0] - 1])
+    return psStack.pop(len(psStack) - psStackDicts.pop(0) - 1) #uses the values from psStackDicts to remove the dictionaries
 
 #<-------------------------Misc. Functions------------------------->
 #is passed two values, a bool, and a function name. If the bool passes, the function is run
 def ifOp(boolVal, function):
+    if boolVal != True: #This and the next 5 lines ensure it is a boolean value
+        if boolVal != False: 
+            raise ValueError('Error: Invalid input')
     if boolVal:
         execute(function)
 
 #simila to ifOp, instead it has two functions where if boolVal is false, funcB runs instead of just ending
 def ifelseOp(boolVal, funcA, funcB):
+    if boolVal != True: #This and the next 5 lines ensure it is a boolean value
+        if boolVal != False: 
+            raise ValueError('Error: Invalid input')
     if boolVal:
         execute(funcA)
     else:
@@ -67,46 +79,68 @@ def execute(funcName):
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def add():
     vals = popTwo() #gets two values
-    pushStack(vals[0] + vals[1])
+    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)): #Filters out bad inputs ie if some bad code is on the stack. Does not filter out bools.
+        pushStack(vals[0] + vals[1])
+    else:
+        raise ValueError("Error: Input must contain digits")
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def sub():
     vals = popTwo()
-    pushStack(vals[0] - vals[1])
+    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
+        pushStack(vals[0] - vals[1])
+    else:
+        raise ValueError("Error: Input must contain digits")
     
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def mul():
     vals = popTwo()
-    pushStack(vals[0] * vals[1])
+    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
+        pushStack(vals[0] * vals[1])
+    else:
+        raise ValueError("Error: Input must contain digits")
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def div():
     vals = popTwo()
-    pushStack(vals[0] / vals[1])
+    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
+        if vals[1] == 0:
+            raise ValueError("Error: Cannot divide by zero")
+        pushStack(vals[0] / vals[1])
+    else:
+        raise ValueError("Error: Input must contain digits")
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def eq():
     vals = popTwo()
-    boolean = False
-    if vals[0] == vals[1]:
-        boolean = True
-   pushStack(boolean)
+    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
+        boolean = False
+        if vals[0] == vals[1]:
+            boolean = True
+        pushStack(boolean)
+    else:
+        raise ValueError("Error: Input must contain digits")
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def lt():
     vals = popTwo()
-    lessThan = False
-    if vals[0] > vals[1]:
-        lessThan = True
-    pushStack(lessThan)
-
+    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
+        lessThan = False
+        if vals[0] > vals[1]:
+            lessThan = True
+        pushStack(lessThan)
+    else:
+        raise ValueError("Error: Input must contain digits")    
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def gt():
     vals = popTwo()
-    greaterThan = False
-    if vals[0] < vals[1]:
-        greaterThan = True
-    pushStack(greaterThan)
+    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
+        greaterThan = False
+        if vals[0] < vals[1]:
+            greaterThan = True
+        pushStack(greaterThan)
+    else:
+        raise ValueError("Error: Input must contain digits")
 
 
 #<----------------------Logical---------------------->
@@ -152,10 +186,12 @@ def lookup(key):
     for i in range(len(dictStack)): #scans all the dicts to see if it is a older variable
         if debug: print(i)
         currDict = dictStack[i]
+        if debug: print(currDict)
         value = currDict.get(key, False)
-        if value:
+        if value != False:
             if debug: print(value)
-            pushStack(value)
+            pushStack(value)    
+            return None #Run this to avoid the following error
     raise ValueError("Error: Variable, ", key, ", has not been defined")   
 
 #Recieves a key and its value, and pushes it onto the current stack to use later. Either that or it raises an error
@@ -170,10 +206,16 @@ def dictz():
     psStackDicts.insert(0, len(psStack)) #insert position data for popping onto psStackDicts
     pushStack({})#pushes empty dict
 
-#Makes a call to get top most dict off the psStack, then put it on the dictStack
+    #Makes a call to get top most dict off the psStack, then put it on the dictStack
 def begin():
     dictStack.insert(0, popDict())
 
 #Makes a call to a built in list operator to remove the top most value on the dictStack
 def end():
     dictStack.pop(0)
+
+#Included for debugging purposes
+def printDictStack():
+    stackHeight = len(dictStack) #gets length
+    for i in range(stackHeight): #goes through each itme
+        print(dictStack[i])
