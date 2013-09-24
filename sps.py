@@ -52,6 +52,12 @@ def popDict():
     if debug: print(psStack[len(psStack) - psStackDicts[0] - 1])
     return psStack.pop(len(psStack) - psStackDicts.pop(0) - 1) #uses the values from psStackDicts to remove the dictionaries
 
+#Used in processing file
+def topVal():
+    val = psStack[0]
+    psStack.pop(0)
+    return val
+
 #<-------------------------Misc. Functions------------------------->
 #is passed two values, a bool, and a function name. If the bool passes, the function is run
 def ifOp(boolVal, function):
