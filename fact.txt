@@ -7,3 +7,4 @@
    ifelse
    end
 } def
+40 fact

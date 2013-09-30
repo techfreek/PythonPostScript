@@ -3,7 +3,6 @@ global debug
 debug = False
 
 psStack = [] #values are stored in a list, with 0 being the top
-psStackDicts = [] #used to store the positions of dicts in the psStack, values are stored similar to the psStack
 origDict = {'true': True, 'false': False} #stores variables, functions in the dictionary. true/false already exist so ps true/false can be converted to python True/False
 dictStack = [origDict] #The dict stack stores values just like the psStack with the newest at dictStack[0]
 
@@ -24,9 +23,10 @@ def popTop():
         raise ValueError("Error: Can't pop. No values on the stack.")
 
 #No inputs needed, just prints value, only output is the text displayed.
-def stackPrint():
+def stack():
+    print("OperandStack:")
     stackHeight = len(psStack) #gets length
-    for i in range(stackHeight): #goes through each itme
+    for i in range(stackHeight): #goes through each item
         print(psStack[i])
 
 #Removes top most element and prints it
@@ -49,12 +49,14 @@ def pushStack(value):
 #No inputs, returns the top most dictionary
 def popDict():
     #algorithm works by counting how many values in the stack when pushed and popped. When popped, it counts that far from the end to the correct position
-    if debug: print(psStack[len(psStack) - psStackDicts[0] - 1])
-    return psStack.pop(len(psStack) - psStackDicts.pop(0) - 1) #uses the values from psStackDicts to remove the dictionaries
+    for i in range(len(psStack)):
+        if psStack[i] == "{}":#Scans for the top most empty dict on the operand stack
+            psStack.pop(i) #pops it
+    return {}
 
 #Used in processing file
 def topVal():
-    val = psStack[0]
+    val = psStack[0] #So I don't try to return a deleted value
     psStack.pop(0)
     return val
 
@@ -69,84 +71,63 @@ def ifOp(boolVal, function):
 
 #simila to ifOp, instead it has two functions where if boolVal is false, funcB runs instead of just ending
 def ifelseOp(boolVal, funcA, funcB):
+    if debug: print(boolVal)
     if boolVal != True: #This and the next 5 lines ensure it is a boolean value
         if boolVal != False: 
             raise ValueError('Error: Invalid input')
     if boolVal:
-        execute(funcA)
+        pushStack(funcA)
     else:
-        execute(funcB)
-
-#Recieves a function name for processing
-def execute(funcName):
-    print("W.I.P.\n") #To come later, this is the interpreter/function executer
+        pushStack(funcB)
 
 #<----------------------Math---------------------->
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def add():
     vals = popTwo() #gets two values
-    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)): #Filters out bad inputs ie if some bad code is on the stack. Does not filter out bools.
-        pushStack(vals[0] + vals[1])
-    else:
-        raise ValueError("Error: Input must contain digits")
+    pushStack(int(vals[1]) + int(vals[0]))
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def sub():
     vals = popTwo()
-    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
-        pushStack(vals[0] - vals[1])
-    else:
-        raise ValueError("Error: Input must contain digits")
+    pushStack(int(vals[1]) - int(vals[0]))
+
     
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def mul():
     vals = popTwo()
-    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
-        pushStack(vals[0] * vals[1])
-    else:
-        raise ValueError("Error: Input must contain digits")
+    pushStack(int(vals[0]) * int(vals[1]))
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def div():
     vals = popTwo()
-    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
-        if vals[1] == 0:
-            raise ValueError("Error: Cannot divide by zero")
-        pushStack(vals[0] / vals[1])
-    else:
-        raise ValueError("Error: Input must contain digits")
+    if vals[0] == 0:
+        raise ValueError("Error: Cannot divide by zero") #So other errors don't arise
+    pushStack(int(vals[1]) / int(vals[0]))
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def eq():
     vals = popTwo()
-    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
-        boolean = False
-        if vals[0] == vals[1]:
-            boolean = True
-        pushStack(boolean)
-    else:
-        raise ValueError("Error: Input must contain digits")
+    boolean = False
+    if debug: print(vals)
+    if str(vals[0]) == str(vals[1]): #Problems when they are not converted to the same type
+        boolean = True
+    pushStack(boolean)
 
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def lt():
     vals = popTwo()
-    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
-        lessThan = False
-        if vals[0] > vals[1]:
-            lessThan = True
-        pushStack(lessThan)
-    else:
-        raise ValueError("Error: Input must contain digits")    
+    lessThan = False
+    if int(vals[0]) > int(vals[1]):
+        lessThan = True
+    pushStack(lessThan)
+    
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def gt():
-    vals = popTwo()
-    if isinstance(vals[0], (int, float, complex)) and isinstance(vals[0], (int, float, complex)):
-        greaterThan = False
-        if vals[0] < vals[1]:
-            greaterThan = True
-        pushStack(greaterThan)
-    else:
-        raise ValueError("Error: Input must contain digits")
+    vals = popTwo() #recieves two values
+    greaterThan = False
+    if int(vals[0]) < int(vals[1]): #ensures the values are ints
+        greaterThan = True
+    pushStack(greaterThan)
 
 
 #<----------------------Logical---------------------->
@@ -155,7 +136,7 @@ def andOp(boolA, boolB): #named for and operator, but the shortened form of that
     if boolA != True: #This and the next 5 lines ensure it is a boolean value
         if boolA != False:
             raise ValueError('Error: Invalid input')
-    if boolB != True:
+    if boolB != True:#Ensures it is actually a boolean value
         if boolB != False:
             raise ValueError('Error: Invalid input')
     if boolA ==  boolB == True:
@@ -165,10 +146,10 @@ def andOp(boolA, boolB): #named for and operator, but the shortened form of that
 
 #recieves two boolean values, verifies they are boolean, then evaluates, pushes boolean value back on stack
 def orOp(boolA, boolB):
-    if boolA != True:
+    if boolA != True: #Ensures it is actually a boolean value
         if boolA != False:
             raise ValueError('Error: Invalid input')
-    if boolB != True:
+    if boolB != True:#Ensures it is actually a boolean value
         if boolB != False:
             raise ValueError('Error: Invalid input')
     if boolA == True or boolB == True:
@@ -178,7 +159,7 @@ def orOp(boolA, boolB):
 
 #recieves a boolean value, verifies it is boolean, then evaluates, pushes opposite boolean value back on stack
 def notOp(boolVar):
-    if boolVar != True:
+    if boolVar != True: #Ensures it is actually a boolean value
         if boolVar != False:
             raise ValueError('Error: Invalid input')
     if boolVar == True:
@@ -190,31 +171,29 @@ def notOp(boolVar):
 #Gets a token, checks in dictionary, then pushes value back on stack or raises an error. No return value
 def lookup(key):
     for i in range(len(dictStack)): #scans all the dicts to see if it is a older variable
-        if debug: print(i)
-        currDict = dictStack[i]
+        currDict = dictStack[i] #Gets topmost dictionary
         if debug: print(currDict)
-        value = currDict.get(key, False)
-        if value != False:
-            if debug: print(value)
-            pushStack(value)    
-            return None #Run this to avoid the following error
-    raise ValueError("Error: Variable, ", key, ", has not been defined")   
+        value = currDict.get(key, "No Value") #Returns value or "No Value" (helps differentiate between not being defined or being an actual value)
+        if value != "No Value":
+            return value #Run this to avoid the following error
+    #return "No Value"
 
 #Recieves a key and its value, and pushes it onto the current stack to use later. Either that or it raises an error
 def define(key, value): #puts the value in the topmost dictionary
-    currDict = dictStack[0]
-    if key == "true" or key == "false":
+    if debug: print("Key: ", key, "Value: ", value)
+    currDict = dictStack[0] #Gets the topmost dictionary
+    if key == "true" or key == "false": #So people don't over-write the default
         raise ValueError("Error: You can't re-define True and False")
-    currDict[key] = value
+    currDict[key[1:]] = value #pushes the key onto the stack while ignoring the '/'
 
 #Creates a new blank dictionary on the stack, and records its position
 def dictz():
-    psStackDicts.insert(0, len(psStack)) #insert position data for popping onto psStackDicts
     pushStack({})#pushes empty dict
 
-    #Makes a call to get top most dict off the psStack, then put it on the dictStack
+#Makes a call to get top most dict off the psStack, then put it on the dictStack
 def begin():
-    dictStack.insert(0, popDict())
+    dictStack.insert(0, popDict()) #Get the dictionary off the opstack
+    if debug: printDictStack()
 
 #Makes a call to a built in list operator to remove the top most value on the dictStack
 def end():
@@ -222,6 +201,8 @@ def end():
 
 #Included for debugging purposes
 def printDictStack():
+    print("\nDict Stack: ")#Labeling & spacing
     stackHeight = len(dictStack) #gets length
     for i in range(stackHeight): #goes through each itme
         print(dictStack[i])
+        print("==========================================================================")
