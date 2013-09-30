@@ -1,0 +1,8 @@
+/y 3 def
+/f { dict /z y def
+	begin
+	/z 4 def
+	/y 5 def
+	z y mul
+} def
+y f y mul	
