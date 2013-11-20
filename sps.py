@@ -169,30 +169,45 @@ def notOp(boolVar):
 
 #<-------------------------Dictionary------------------------->
 #Gets a token, checks in dictionary, then pushes value back on stack or raises an error. No return value
-def lookup(key):
-    for i in range(len(dictStack)): #scans all the dicts to see if it is a older variable
-        currDict = dictStack[i] #Gets topmost dictionary
-        if debug: print(currDict)
-        value = currDict.get(key, "No Value") #Returns value or "No Value" (helps differentiate between not being defined or being an actual value)
-        if value != "No Value":
-            return value #Run this to avoid the following error
-    #return "No Value"
+def lookup(key, static):
+    dictIndex = len(dictStack) - 1
+    if dictIndex > 0:
+        if static:
+            while True:
+                currDict = dictStack[dictIndex] #Gets topmost dictionary
+                value = currDict[0].get(key, "No Value")
+                if value == "No Value":
+                    dictIndex = currDict[1]
+                else:
+                    return value
+        else:
+            for i in range(dictStack, 0, -1): #scans all the dicts to see if it is a older variable
+                currDict = dictStack[i] #Gets topmost dictionary
+                if debug: print(currDict)
+                value = currDict[0].get(key, "No Value") #Returns value or "No Value" (helps differentiate between not being defined or being an actual value)
+                if value != "No Value":
+                    return value #Run this to avoid the following error
+            #return "No Value"
+    else:
+        return None
 
 #Recieves a key and its value, and pushes it onto the current stack to use later. Either that or it raises an error
-def define(key, value): #puts the value in the topmost dictionary
+def define(key, value, function): #puts the value in the topmost dictionary
     if debug: print("Key: ", key, "Value: ", value)
-    currDict = dictStack[0] #Gets the topmost dictionary
-    if key == "true" or key == "false": #So people don't over-write the default
-        raise ValueError("Error: You can't re-define True and False")
-    currDict[key[1:]] = value #pushes the key onto the stack while ignoring the '/'
+    dicts = len(dictStack) - 1
+    currDict = dictStack[dicts] #Gets the topmost dictionary
+    #if key == "true" or key == "false": #So people don't over-write the default
+        #raise ValueError("Error: You can't re-define True and False")
+    currDict[0][key[1:]] = value #pushes the key onto the stack while ignoring the '/'
 
 #Creates a new blank dictionary on the stack, and records its position
-def dictz():
-    pushStack({})#pushes empty dict
+def dictz(dictIndex):
+    newDict = ({}, dictIndex)
+    pushStack(newDict)#pushes empty dict
 
 #Makes a call to get top most dict off the psStack, then put it on the dictStack
 def begin():
-    dictStack.insert(0, popDict()) #Get the dictionary off the opstack
+    dictStack.append(popDict()) #Get the dictionary off the opstack
     if debug: printDictStack()
 
 #Makes a call to a built in list operator to remove the top most value on the dictStack
@@ -203,6 +218,13 @@ def end():
 def printDictStack():
     print("\nDict Stack: ")#Labeling & spacing
     stackHeight = len(dictStack) #gets length
-    for i in range(stackHeight): #goes through each itme
-        print(dictStack[i])
+    if stackHeight == 0:
+        print("================\n")
+        print("Empty Dict Stack\n")
+        print("================\n")
+        return None
+    for i in range((stackHeight - 1), 0, -1): #goes through each itme
+        tempStack = dictStack[i]
+        print(tempStack)
+        #print(tempStack[0])
         print("==========================================================================")

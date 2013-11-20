@@ -3,7 +3,9 @@ import re
 import sys
 from sps import *
 global debug
-debug = False
+global static
+static = False
+debug = True
 
 pattern = '/?[a-zA-Z][a-zA-Z0-9_]*|[-]?[0-9]+|[}{]|%.*|[^\t\n ]'
 
@@ -138,7 +140,7 @@ def threeInput(token, paramA, paramB, paramC):
 
 #Checks if a token is a variable
 def isVar(token):
-    value = lookup(token)
+    value = lookup(token, static)
     if debug: print("Key: ", token, "Value: ", value)
     if(value == None): #checks if anything was returned
         return None #Not a variable
@@ -146,7 +148,10 @@ def isVar(token):
         return value
 
 #Takes the tokens, processes them
-def read(tokens):
+def read(tokens, dictIndex):
+    dictz(dictIndex)
+    begin()
+    printDictStack()
     #if debug: print("Tokens Length = ", len(tokens))
     i = 0 #starting i value
     while i < len(tokens): #Needed to use a while loop because a for loop would not let me change 'i' value when '{' were encountered and have that be reflected in further iterations
@@ -192,7 +197,7 @@ def read(tokens):
                 threeInput(tokens[i], topVal(), topVal(), topVal())
                 if tokens[i] == "ifelse": #This could be bundled above, but this allows for greater reuse
                     if debug: print("<--------------------------------Read again!")
-                    read(parse(topVal()[1:-1]))#Takes the top most value, parses it, and evaluates it in read()
+                    read(parse(topVal()[1:-1]), dictIndex + 1)#Takes the top most value, parses it, and evaluates it in read()
             if debug:
                 if tokens[i] == "def": printDictStack
 
@@ -204,15 +209,20 @@ def read(tokens):
     
 
 if __name__=="__main__":
-    if(len(sys.argv) > 1): #If arguments are passed, the file is opened, if not,  the fact.txt file is opened
+    if(len(sys.argv) > 2): #If arguments are passed, the file is opened, if not,  the fact.txt file is opened
+        if sys.argv[1] == "-d":
+            static = False
+        else:
+            static = True
         fn = sys.argv[1]
     else:
+        static = True;
         fn = "fact.txt"
     if debug: print("<--------------------------------Debug Mode On-------------------------------->")
     print("File: ", fn)
     tokens = parseFile(open(fn, "r"))
     if debug: print(tokens)
-    read(tokens)
+    read(tokens, 0)
     stack()
     printDictStack()
     wait = input("PRESS ENTER TO EXIT ") #So the window doesn't auto close if opened directly
