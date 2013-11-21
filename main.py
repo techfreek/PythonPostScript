@@ -148,10 +148,10 @@ def isVar(token):
         return value
 
 #Takes the tokens, processes them
-def read(tokens, dictIndex):
-    dictz(dictIndex)
+def read(tokens):
+    dictz()
+    if debug: stack()
     begin()
-    printDictStack()
     #if debug: print("Tokens Length = ", len(tokens))
     i = 0 #starting i value
     while i < len(tokens): #Needed to use a while loop because a for loop would not let me change 'i' value when '{' were encountered and have that be reflected in further iterations
@@ -160,7 +160,7 @@ def read(tokens, dictIndex):
         if debug: print("\nToken[i] = ", tokens[i], " - ", opParams)
         if opParams == -1 and isVar(tokens[i]) != None: #if it is a variable
             if debug: printDictStack()
-            value = lookup(tokens[i]) #get the value
+            value = lookup(tokens[i], static) #get the value
             if not(isinstance(value, (int, float))) and value[0] == "{" and value[len(value) - 1] == "}": #If the value happens to be a code block
                 if debug: print("<--------------------------------Read again!")
                 read(parse(value[1:-1])) #sends the parsed tokens of the value to the read function
@@ -168,7 +168,8 @@ def read(tokens, dictIndex):
                 if debug: print("Result: ", value)
                 pushStack(value)
             else:
-                pushStack(lookup(tokens[i])) #Checks if the tokens[i] is a variable before pushing it
+                pushStack(lookup(tokens[i], static)) #Checks if the tokens[i] is a variable before pushing it
+                
         elif(tokens[i] == '{'): #if a code block, concate to a string, then push on the stack as whole
             codeBlock = ""
             codeBlock += tokens[i]
@@ -197,7 +198,7 @@ def read(tokens, dictIndex):
                 threeInput(tokens[i], topVal(), topVal(), topVal())
                 if tokens[i] == "ifelse": #This could be bundled above, but this allows for greater reuse
                     if debug: print("<--------------------------------Read again!")
-                    read(parse(topVal()[1:-1]), dictIndex + 1)#Takes the top most value, parses it, and evaluates it in read()
+                    read(parse(topVal()[1:-1]))#Takes the top most value, parses it, and evaluates it in read()
             if debug:
                 if tokens[i] == "def": printDictStack
 
@@ -208,7 +209,7 @@ def read(tokens, dictIndex):
     
     
 
-if __name__=="__main__":
+if __name__== "__main__":
     if(len(sys.argv) > 2): #If arguments are passed, the file is opened, if not,  the fact.txt file is opened
         if sys.argv[1] == "-d":
             static = False
@@ -216,13 +217,13 @@ if __name__=="__main__":
             static = True
         fn = sys.argv[1]
     else:
-        static = True;
+        static = False;
         fn = "fact.txt"
     if debug: print("<--------------------------------Debug Mode On-------------------------------->")
     print("File: ", fn)
     tokens = parseFile(open(fn, "r"))
     if debug: print(tokens)
-    read(tokens, 0)
+    read(tokens)
     stack()
     printDictStack()
     wait = input("PRESS ENTER TO EXIT ") #So the window doesn't auto close if opened directly

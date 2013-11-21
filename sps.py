@@ -1,9 +1,9 @@
 #Programmer: Alex Bahm
 global debug
-debug = False
+debug = True
 
 psStack = [] #values are stored in a list, with 0 being the top
-origDict = {'true': True, 'false': False} #stores variables, functions in the dictionary. true/false already exist so ps true/false can be converted to python True/False
+origDict = ({'true': True, 'false': False}, 0) #stores variables, functions in the dictionary. true/false already exist so ps true/false can be converted to python True/False
 dictStack = [origDict] #The dict stack stores values just like the psStack with the newest at dictStack[0]
 
 #<-------------------------Stack------------------------->
@@ -50,7 +50,8 @@ def pushStack(value):
 def popDict():
     #algorithm works by counting how many values in the stack when pushed and popped. When popped, it counts that far from the end to the correct position
     for i in range(len(psStack)):
-        if psStack[i] == "{}":#Scans for the top most empty dict on the operand stack
+        isDict = isinstance(psStack[i], tuple)
+        if isDict:#Scans for the top most empty dict on the operand stack
             psStack.pop(i) #pops it
     return {}
 
@@ -59,6 +60,15 @@ def topVal():
     val = psStack[0] #So I don't try to return a deleted value
     psStack.pop(0)
     return val
+
+def topFunc():
+    for i in range(len(psStack)):
+        temp = psStack[i]
+        if type(temp) == "<class 'dict'>":
+            first = temp[0:1]
+            if first == "/":
+                return temp[1:]
+    return None
 
 #<-------------------------Misc. Functions------------------------->
 #is passed two values, a bool, and a function name. If the bool passes, the function is run
@@ -174,25 +184,40 @@ def lookup(key, static):
     if dictIndex > 0:
         if static:
             while True:
-                currDict = dictStack[dictIndex] #Gets topmost dictionary
-                value = currDict[0].get(key, "No Value")
+                current = dictStack[dictIndex] #Gets topmost dictionary
+                print(dictIndex)
+                currDict = current[0]
+                value = currDict.get(key, "No Value")
+                if value == "No Value" and dictIndex == 0:
+                    return None
                 if value == "No Value":
-                    dictIndex = currDict[1]
+                    dictIndex = current[1];
                 else:
                     return value
         else:
-            for i in range(dictStack, 0, -1): #scans all the dicts to see if it is a older variable
-                currDict = dictStack[i] #Gets topmost dictionary
+            for i in range(len(dictStack) - 1, 0, -1): #scans all the dicts to see if it is a older variable
+                current = dictStack[i] #Gets topmost dictionary
+                currDict = current[0]
                 if debug: print(currDict)
-                value = currDict[0].get(key, "No Value") #Returns value or "No Value" (helps differentiate between not being defined or being an actual value)
+                value = currDict.get(key, "No Value") #Returns value or "No Value" (helps differentiate between not being defined or being an actual value)
                 if value != "No Value":
                     return value #Run this to avoid the following error
             #return "No Value"
     else:
         return None
 
+def findDict():
+    func = topFunc()
+    for i in range(len(dictStack) - 1, 0, -1):
+        current = dictStack[i]
+        currDict = current[0]
+        currIndex = current[1]
+        if currDict.get(func, False):
+            return i
+    return 0
+
 #Recieves a key and its value, and pushes it onto the current stack to use later. Either that or it raises an error
-def define(key, value, function): #puts the value in the topmost dictionary
+def define(key, value): #puts the value in the topmost dictionary
     if debug: print("Key: ", key, "Value: ", value)
     dicts = len(dictStack) - 1
     currDict = dictStack[dicts] #Gets the topmost dictionary
@@ -201,13 +226,16 @@ def define(key, value, function): #puts the value in the topmost dictionary
     currDict[0][key[1:]] = value #pushes the key onto the stack while ignoring the '/'
 
 #Creates a new blank dictionary on the stack, and records its position
-def dictz(dictIndex):
-    newDict = ({}, dictIndex)
+def dictz():
+    newDict = {}
     pushStack(newDict)#pushes empty dict
 
 #Makes a call to get top most dict off the psStack, then put it on the dictStack
 def begin():
-    dictStack.append(popDict()) #Get the dictionary off the opstack
+    print("Beginning!\n")
+    index = findDict()
+    cell = (popDict(), findDict())
+    dictStack.append(cell) #Get the dictionary off the opstack
     if debug: printDictStack()
 
 #Makes a call to a built in list operator to remove the top most value on the dictStack
