@@ -1,4 +1,5 @@
 #Programmer: Alex Bahm
+import numbers
 global debug
 debug = True
 
@@ -47,13 +48,14 @@ def pushStack(value):
     psStack.insert(0, value) #0 corresponds to the position, and the value is what goes there
 
 #No inputs, returns the top most dictionary
-def popDict():
+def popDict(): 
     #algorithm works by counting how many values in the stack when pushed and popped. When popped, it counts that far from the end to the correct position
+    stack()
     for i in range(len(psStack)):
-        isDict = isinstance(psStack[i], tuple)
+        isDict = isinstance(psStack[i], dict)
         if isDict:#Scans for the top most empty dict on the operand stack
             psStack.pop(i) #pops it
-    return {}
+            return {}
 
 #Used in processing file
 def topVal():
@@ -99,6 +101,7 @@ def add():
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def sub():
     vals = popTwo()
+    print("Val[0] - " + str(vals[0]) + " Val[1] - " + str(vals[1]));
     pushStack(int(vals[1]) - int(vals[0]))
 
     
@@ -182,11 +185,12 @@ def notOp(boolVar):
 def lookup(key, static):
     dictIndex = len(dictStack) - 1
     if dictIndex > 0:
-        if static:
+        if static == True:
             while True:
                 current = dictStack[dictIndex] #Gets topmost dictionary
-                print(dictIndex)
+                print("DictIndex: " + str(dictIndex), end= " ")
                 currDict = current[0]
+                print(" CurrDict: " + str(currDict))
                 value = currDict.get(key, "No Value")
                 if value == "No Value" and dictIndex == 0:
                     return None
@@ -214,16 +218,21 @@ def findDict():
         currIndex = current[1]
         if currDict.get(func, False):
             return i
-    return 0
+    return len(dictStack) - 1
 
 #Recieves a key and its value, and pushes it onto the current stack to use later. Either that or it raises an error
 def define(key, value): #puts the value in the topmost dictionary
-    if debug: print("Key: ", key, "Value: ", value)
+    if debug: print("Define  - Key: ", key, "Value: ", value)
     dicts = len(dictStack) - 1
-    currDict = dictStack[dicts] #Gets the topmost dictionary
+    current = dictStack[dicts] #Gets the topmost dictionary
+    currDict = current[0]
     #if key == "true" or key == "false": #So people don't over-write the default
         #raise ValueError("Error: You can't re-define True and False")
-    currDict[0][key[1:]] = value #pushes the key onto the stack while ignoring the '/'
+    try:
+        value = int(value)
+    except:
+        pass
+    currDict[key[1:]] = value #pushes the key onto the stack while ignoring the '/'
 
 #Creates a new blank dictionary on the stack, and records its position
 def dictz():
@@ -245,14 +254,17 @@ def end():
 #Included for debugging purposes
 def printDictStack():
     print("\nDict Stack: ")#Labeling & spacing
-    stackHeight = len(dictStack) #gets length
-    if stackHeight == 0:
+    dictHeight = len(dictStack) #gets length
+    if dictStack == 0:
         print("================\n")
         print("Empty Dict Stack\n")
         print("================\n")
         return None
-    for i in range((stackHeight - 1), 0, -1): #goes through each itme
+    for i in range((dictHeight - 1), 0, -1): #goes through each itme
         tempStack = dictStack[i]
         print(tempStack)
         #print(tempStack[0])
         print("==========================================================================")
+
+def dictHeight():
+    return len(dictStack)

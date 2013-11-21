@@ -68,6 +68,13 @@ def isOperator(token):
     elif token == "end":
         return 0
     else:
+        value = lookup(token, static)
+        if value != None:
+            try:
+                if value[0:1] == "{":
+                    return -2
+            except:
+                pass
         return -1 #In case its anything else
 
 #To process the functions with no inputs
@@ -142,6 +149,7 @@ def threeInput(token, paramA, paramB, paramC):
 def isVar(token):
     value = lookup(token, static)
     if debug: print("Key: ", token, "Value: ", value)
+    printDictStack()
     if(value == None): #checks if anything was returned
         return None #Not a variable
     else:
@@ -149,12 +157,17 @@ def isVar(token):
 
 #Takes the tokens, processes them
 def read(tokens):
-    dictz()
+    print("Reading!!")
     if debug: stack()
-    begin()
     #if debug: print("Tokens Length = ", len(tokens))
     i = 0 #starting i value
     while i < len(tokens): #Needed to use a while loop because a for loop would not let me change 'i' value when '{' were encountered and have that be reflected in further iterations
+        print("Token: " + tokens[i])
+        print("Tokens: ", end = "")
+        for z in range(len(tokens)):
+            print(tokens[z], end = " ")
+        print("/n")
+        print("I = " + str(i))
         opParams = isOperator(tokens[i]) #counts how many variables need to be passed, if any
         if debug: stack()
         if debug: print("\nToken[i] = ", tokens[i], " - ", opParams)
@@ -169,7 +182,13 @@ def read(tokens):
                 pushStack(value)
             else:
                 pushStack(lookup(tokens[i], static)) #Checks if the tokens[i] is a variable before pushing it
-                
+        elif opParams == -2: #is a function
+            dictz()
+            begin()
+            print("NewFunc!")
+            read(parse(lookup(tokens[i], static)[1:-1])) #isOperator already tested and knows this is a function, hence no double checking
+            end()
+            
         elif(tokens[i] == '{'): #if a code block, concate to a string, then push on the stack as whole
             codeBlock = ""
             codeBlock += tokens[i]
@@ -217,12 +236,17 @@ if __name__== "__main__":
             static = True
         fn = sys.argv[1]
     else:
-        static = False;
-        fn = "fact.txt"
+        static = True;
+        fn = "test.txt"
     if debug: print("<--------------------------------Debug Mode On-------------------------------->")
     print("File: ", fn)
+    stack()
+    printDictStack()
     tokens = parseFile(open(fn, "r"))
     if debug: print(tokens)
+    stack()
+    dictz()
+    begin()
     read(tokens)
     stack()
     printDictStack()
