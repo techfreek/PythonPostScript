@@ -72,6 +72,30 @@ def topFunc():
                 return temp[1:]
     return None
 
+def concatFunc(function):
+    codeBlock = ""
+    #codeBlock += function[0]
+    print("Function: ")
+    for i in range(len(function)):
+        print(function[i], end=" ")
+    print("\n")
+    blocks = 1 #how many code blocks are contained in the code block
+    #if debug:  print("I = ", i, " function[i] = ", function[i])
+    for j in range(len(function) - 1): #scans from after the { till the last token unless enough '}' are found 
+        print("Function Token: " + function[j])
+        codeBlock += " " + function[j]  #add token to string
+        if function[j] == "{": #Another code block has started
+            blocks = blocks + 1
+        elif function[j] == "}": #another code block has ended, so make not
+            blocks = blocks - 1
+
+        if blocks == 0: #if we are now out of all code blocks, we can push that string onto the stack
+                print("Codeblock: " + codeBlock)
+                return (codeBlock, (j+1))
+                break #Ends loop so we don't keep scanning for '}' when we don't need too            
+            
+    return (codeBlock, (j + 1))
+
 #<-------------------------Misc. Functions------------------------->
 #is passed two values, a bool, and a function name. If the bool passes, the function is run
 def ifOp(boolVal, function):

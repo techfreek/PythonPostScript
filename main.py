@@ -188,22 +188,25 @@ def read(tokens):
             print("NewFunc!")
             read(parse(lookup(tokens[i], static)[1:-1])) #isOperator already tested and knows this is a function, hence no double checking
             end()
-            
+             
         elif(tokens[i] == '{'): #if a code block, concate to a string, then push on the stack as whole
-            codeBlock = ""
-            codeBlock += tokens[i]
-            blocks = 1 #how many code blocks are contained in the code block
-            if debug:  print("I = ", i, " tokens[i] = ", tokens[i])
-            for j in range((i + 1), len(tokens) - 1): #scans from after the { till the last token unless enough '}' are found 
-                codeBlock += " " + tokens[j]  #add token to string
-                if tokens[j] == "{": #Another code block has started
-                    blocks = blocks + 1
-                elif tokens[j] == "}": #another code block has ended, so make not
-                    blocks = blocks - 1
-                    if blocks == 0: #if we are now out of all code blocks, we can push that string onto the stack
-                        pushStack(codeBlock)
-                        break #Ends loop so we don't keep scanning for '}' when we don't need to
-            i = j #So we don't rescan those tokens
+            #codeBlock = ""
+            #codeBlock += tokens[i]
+            #blocks = 1 #how many code blocks are contained in the code block
+            #if debug:  print("I = ", i, " tokens[i] = ", tokens[i])
+            #for j in range((i + 1), len(tokens) - 1): #scans from after the { till the last token unless enough '}' are found 
+                #codeBlock += " " + tokens[j]  #add token to string
+                #if tokens[j] == "{": #Another code block has started
+                    #blocks = blocks + 1
+                #elif tokens[j] == "}": #another code block has ended, so make not
+                    #blocks = blocks - 1
+                    #if blocks == 0: #if we are now out of all code blocks, we can push that string onto the stack
+                        #pushStack(codeBlock)
+                        #break #Ends loop so we don't keep scanning for '}' when we don't need to
+            #i = j #So we don't rescan those tokens
+            codeBlock = concatFunc(tokens[i:])
+            i += codeBlock[1]
+            pushStack(codeBlock[0])
             
         elif(opParams != -1): #If it is an operator
             if debug: print("Operand: ", tokens[i])
