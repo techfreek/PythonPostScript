@@ -1,7 +1,7 @@
 #Programmer: Alex Bahm
 import numbers
 global debug
-debug = True
+debug = False
 
 psStack = [] #values are stored in a list, with 0 being the top
 origDict = ({'true': True, 'false': False}, 0) #stores variables, functions in the dictionary. true/false already exist so ps true/false can be converted to python True/False
@@ -50,7 +50,6 @@ def pushStack(value):
 #No inputs, returns the top most dictionary
 def popDict(): 
     #algorithm works by counting how many values in the stack when pushed and popped. When popped, it counts that far from the end to the correct position
-    stack()
     for i in range(len(psStack)):
         isDict = isinstance(psStack[i], dict)
         if isDict:#Scans for the top most empty dict on the operand stack
@@ -63,36 +62,23 @@ def topVal():
     psStack.pop(0)
     return val
 
-def topFunc():
-    for i in range(len(psStack)):
-        temp = psStack[i]
-        if type(temp) == "<class 'dict'>":
-            first = temp[0:1]
-            if first == "/":
-                return temp[1:]
-    return None
-
 def concatFunc(function):
     codeBlock = ""
-    #codeBlock += function[0]
-    print("Function: ")
-    for i in range(len(function)):
-        print(function[i], end=" ")
-    print("\n")
-    blocks = 1 #how many code blocks are contained in the code block
+    blocks = 0 #how many code blocks are contained in the code block
     #if debug:  print("I = ", i, " function[i] = ", function[i])
     for j in range(len(function) - 1): #scans from after the { till the last token unless enough '}' are found 
-        print("Function Token: " + function[j])
-        codeBlock += " " + function[j]  #add token to string
+        if debug: print("Function Token: " + function[j])
+        codeBlock += function[j]  #add token to string
         if function[j] == "{": #Another code block has started
             blocks = blocks + 1
         elif function[j] == "}": #another code block has ended, so make not
             blocks = blocks - 1
 
         if blocks == 0: #if we are now out of all code blocks, we can push that string onto the stack
-                print("Codeblock: " + codeBlock)
-                return (codeBlock, (j+1))
-                break #Ends loop so we don't keep scanning for '}' when we don't need too            
+                if debug: print("Codeblock: " + codeBlock)
+                return (codeBlock, j)
+                break #Ends loop so we don't keep scanning for '}' when we don't need too
+        codeBlock += " "
             
     return (codeBlock, (j + 1))
 
@@ -125,7 +111,7 @@ def add():
 #No inputs, does a function call to get values, then pushes the answer on the stack, so no output
 def sub():
     vals = popTwo()
-    print("Val[0] - " + str(vals[0]) + " Val[1] - " + str(vals[1]));
+    if debug: print("Val[0] - " + str(vals[0]) + " Val[1] - " + str(vals[1]));
     pushStack(int(vals[1]) - int(vals[0]))
 
     
@@ -212,9 +198,9 @@ def lookup(key, static):
         if static == True:
             while True:
                 current = dictStack[dictIndex] #Gets topmost dictionary
-                print("DictIndex: " + str(dictIndex), end= " ")
+                if debug: print("DictIndex: " + str(dictIndex), end= " ")
                 currDict = current[0]
-                print(" CurrDict: " + str(currDict))
+                if debug: print(" CurrDict: " + str(currDict))
                 value = currDict.get(key, "No Value")
                 if value == "No Value" and dictIndex == 0:
                     return None
@@ -234,14 +220,16 @@ def lookup(key, static):
     else:
         return None
 
-def findDict():
-    func = topFunc()
+def findDict(func):
     for i in range(len(dictStack) - 1, 0, -1):
         current = dictStack[i]
         currDict = current[0]
         currIndex = current[1]
-        if currDict.get(func, False):
-            return i
+        values = currDict.values()
+        vals = [k for k in currDict.values()]
+        for k in range(len(values)):
+            if vals[k] == func:
+                return i
     return len(dictStack) - 1
 
 #Recieves a key and its value, and pushes it onto the current stack to use later. Either that or it raises an error
@@ -264,10 +252,11 @@ def dictz():
     pushStack(newDict)#pushes empty dict
 
 #Makes a call to get top most dict off the psStack, then put it on the dictStack
-def begin():
-    print("Beginning!\n")
-    index = findDict()
-    cell = (popDict(), findDict())
+def begin(func):
+    if debug: print("Beginning!\n")
+    index = findDict(func)
+    if debug: print("Calculated index!")
+    cell = (popDict(), index)
     dictStack.append(cell) #Get the dictionary off the opstack
     if debug: printDictStack()
 
@@ -280,15 +269,15 @@ def printDictStack():
     print("\nDict Stack: ")#Labeling & spacing
     dictHeight = len(dictStack) #gets length
     if dictStack == 0:
-        print("================\n")
-        print("Empty Dict Stack\n")
-        print("================\n")
+        if debug: print("================\n")
+        if debug: print("Empty Dict Stack\n")
+        if debug: print("================\n")
         return None
     for i in range((dictHeight - 1), 0, -1): #goes through each itme
         tempStack = dictStack[i]
         print(tempStack)
         #print(tempStack[0])
-        print("==========================================================================")
+        print("======================================================================================")
 
 def dictHeight():
     return len(dictStack)

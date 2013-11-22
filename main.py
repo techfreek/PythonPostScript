@@ -4,8 +4,8 @@ import sys
 from sps import *
 global debug
 global static
-static = False
-debug = True
+static = True
+debug = False
 
 pattern = '/?[a-zA-Z][a-zA-Z0-9_]*|[-]?[0-9]+|[}{]|%.*|[^\t\n ]'
 
@@ -71,6 +71,7 @@ def isOperator(token):
         value = lookup(token, static)
         if value != None:
             try:
+                if debug: print("Possible functon[0:1]: " + str(value[0:1]))
                 if value[0:1] == "{":
                     return -2
             except:
@@ -90,6 +91,7 @@ def noInput(token):
         return None
     elif token == "stack":
         stack()
+        printDictStack()
         return None
     elif token == "top":
         top()
@@ -149,7 +151,7 @@ def threeInput(token, paramA, paramB, paramC):
 def isVar(token):
     value = lookup(token, static)
     if debug: print("Key: ", token, "Value: ", value)
-    printDictStack()
+    if debug: printDictStack()
     if(value == None): #checks if anything was returned
         return None #Not a variable
     else:
@@ -157,21 +159,19 @@ def isVar(token):
 
 #Takes the tokens, processes them
 def read(tokens):
-    print("Reading!!")
     if debug: stack()
     #if debug: print("Tokens Length = ", len(tokens))
     i = 0 #starting i value
     while i < len(tokens): #Needed to use a while loop because a for loop would not let me change 'i' value when '{' were encountered and have that be reflected in further iterations
-        print("Token: " + tokens[i])
-        print("Tokens: ", end = "")
-        for z in range(len(tokens)):
-            print(tokens[z], end = " ")
-        print("/n")
-        print("I = " + str(i))
+        
+        if debug: print("Token: " + tokens[i])
+        if debug: print("Tokens: ", end = "")
         opParams = isOperator(tokens[i]) #counts how many variables need to be passed, if any
         if debug: stack()
         if debug: print("\nToken[i] = ", tokens[i], " - ", opParams)
-        if opParams == -1 and isVar(tokens[i]) != None: #if it is a variable
+        if tokens[i] == "\n":
+            pass
+        elif opParams == -1 and isVar(tokens[i]) != None: #if it is a variable
             if debug: printDictStack()
             value = lookup(tokens[i], static) #get the value
             if not(isinstance(value, (int, float))) and value[0] == "{" and value[len(value) - 1] == "}": #If the value happens to be a code block
@@ -183,27 +183,13 @@ def read(tokens):
             else:
                 pushStack(lookup(tokens[i], static)) #Checks if the tokens[i] is a variable before pushing it
         elif opParams == -2: #is a function
+            func = lookup(tokens[i], static)
             dictz()
-            begin()
-            print("NewFunc!")
-            read(parse(lookup(tokens[i], static)[1:-1])) #isOperator already tested and knows this is a function, hence no double checking
+            begin(func)
+            read(parse(func[1:-1])) #isOperator already tested and knows this is a function, hence no double checking
             end()
              
         elif(tokens[i] == '{'): #if a code block, concate to a string, then push on the stack as whole
-            #codeBlock = ""
-            #codeBlock += tokens[i]
-            #blocks = 1 #how many code blocks are contained in the code block
-            #if debug:  print("I = ", i, " tokens[i] = ", tokens[i])
-            #for j in range((i + 1), len(tokens) - 1): #scans from after the { till the last token unless enough '}' are found 
-                #codeBlock += " " + tokens[j]  #add token to string
-                #if tokens[j] == "{": #Another code block has started
-                    #blocks = blocks + 1
-                #elif tokens[j] == "}": #another code block has ended, so make not
-                    #blocks = blocks - 1
-                    #if blocks == 0: #if we are now out of all code blocks, we can push that string onto the stack
-                        #pushStack(codeBlock)
-                        #break #Ends loop so we don't keep scanning for '}' when we don't need to
-            #i = j #So we don't rescan those tokens
             codeBlock = concatFunc(tokens[i:])
             i += codeBlock[1]
             pushStack(codeBlock[0])
@@ -233,24 +219,26 @@ def read(tokens):
 
 if __name__== "__main__":
     if(len(sys.argv) > 2): #If arguments are passed, the file is opened, if not,  the fact.txt file is opened
-        if sys.argv[1] == "-d":
+        if sys.argv[1] == "-s":
             static = False
-        else:
-            static = True
-        fn = sys.argv[1]
+        fn = sys.argv[2]
     else:
         static = True;
         fn = "test.txt"
     if debug: print("<--------------------------------Debug Mode On-------------------------------->")
     print("File: ", fn)
-    stack()
-    printDictStack()
+    if static:
+        print("Statically Scoped")
+    else:
+        print("Dynamically Scoped")
+    print("")
+    
     tokens = parseFile(open(fn, "r"))
     if debug: print(tokens)
-    stack()
     dictz()
-    begin()
+    begin("")
     read(tokens)
+    
     stack()
     printDictStack()
     wait = input("PRESS ENTER TO EXIT ") #So the window doesn't auto close if opened directly
